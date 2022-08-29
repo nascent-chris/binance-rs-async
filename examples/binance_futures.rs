@@ -15,9 +15,7 @@ async fn main() {
 
 #[cfg(feature = "futures_api")]
 async fn general() {
-    use binance::api::*;
-    use binance::errors::Error as BinanceLibError;
-    use binance::futures::general::*;
+    use binance::{api::*, errors::Error as BinanceLibError, futures::general::*};
 
     let general: FuturesGeneral = Binance::new(None, None);
 
@@ -53,9 +51,8 @@ async fn general() {
 
 #[cfg(feature = "futures_api")]
 async fn market_data() {
-    use binance::api::*;
-    use binance::futures::market::*;
-    use binance::futures::rest_model::*;
+    use binance::{api::*,
+                  futures::{market::*, rest_model::*}};
 
     let market: FuturesMarket = Binance::new(None, None);
 

@@ -1,13 +1,13 @@
 #[macro_use]
 extern crate tracing;
 
-use binance::account::*;
-use binance::api::*;
-use binance::config::Config;
-use binance::errors::Error as BinanceLibError;
-use binance::general::*;
-use binance::market::*;
-use binance::rest_model::{OrderSide, OrderType, SymbolPrice, TimeInForce};
+use binance::{account::*,
+              api::*,
+              config::Config,
+              errors::Error as BinanceLibError,
+              general::*,
+              market::*,
+              rest_model::{OrderSide, OrderType, SymbolPrice, TimeInForce}};
 use env_logger::Builder;
 
 #[tokio::main]

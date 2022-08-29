@@ -1,10 +1,11 @@
 use serde_json::Value;
 
-use crate::client::*;
-use crate::errors::*;
-use crate::futures::rest_model::*;
-use crate::rest_model::{BookTickers, KlineSummaries, KlineSummary, PairAndWindowQuery, PairQuery, SymbolPrice, Tickers};
-use crate::util::*;
+use crate::{client::*,
+            errors::*,
+            futures::rest_model::*,
+            rest_model::{BookTickers, KlineSummaries, KlineSummary, PairAndWindowQuery, PairQuery, SymbolPrice,
+                         Tickers},
+            util::*};
 
 //TODO: Validate intervals and start/end times in history queries
 //TODO: find out the repartition of kline/candlestick columns in the future kline rows

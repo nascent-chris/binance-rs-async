@@ -1,14 +1,12 @@
-use std::collections::BTreeMap;
 use std::fmt;
 
 use serde::Serializer;
 
-use crate::account::OrderCancellation;
-use crate::client::Client;
-use crate::errors::*;
-use crate::rest_model::{OrderSide, TimeInForce};
-use crate::rest_model::{PairAndWindowQuery, PairQuery};
-use crate::util::*;
+use crate::{account::OrderCancellation,
+            client::Client,
+            errors::*,
+            rest_model::{OrderSide, PairAndWindowQuery, PairQuery, TimeInForce},
+            util::*};
 
 use super::rest_model::{AccountBalance, CanceledOrder, ChangeLeverageResponse, OrderType, Position, Transaction};
 
@@ -225,10 +223,7 @@ impl FuturesAccount {
     where
         S: Into<String>,
     {
-        let mut parameters: BTreeMap<String, String> = BTreeMap::new();
-        parameters.insert("symbol".into(), symbol.into());
-        parameters.insert("leverage".into(), leverage.to_string());
-
+        let parameters = [("symbol", symbol.into()), ("leverage", leverage.to_string())];
         let request = build_signed_request(parameters, self.recv_window)?;
         self.client.post_signed_d("/fapi/v1/leverage", request.as_str()).await
     }

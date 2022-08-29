@@ -32,3 +32,5 @@ overflow_delimited_expr = true
 # Use field initialize shorthand if possible.
 # https://github.com/rust-lang/rustfmt/blob/master/Configurations.md#use_field_init_shorthand
 use_field_init_shorthand = true
+
+imports_granularity = "crate"

@@ -1,7 +1,4 @@
-use crate::client::*;
-use crate::errors::*;
-use crate::rest_model::*;
-use crate::util::*;
+use crate::{client::*, errors::*, rest_model::*, util::*};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

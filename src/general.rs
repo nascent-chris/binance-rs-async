@@ -1,8 +1,6 @@
 use serde_json::Value;
 
-use crate::client::*;
-use crate::errors::*;
-use crate::rest_model::*;
+use crate::{client::*, errors::*, rest_model::*};
 
 #[derive(Clone)]
 pub struct General {

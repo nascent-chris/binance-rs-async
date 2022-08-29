@@ -1,9 +1,4 @@
-use crate::account::*;
-use crate::client::*;
-use crate::config::Config;
-use crate::general::*;
-use crate::market::*;
-use crate::userstream::*;
+use crate::{account::*, client::*, config::Config, general::*, market::*, userstream::*};
 
 pub trait Binance: Sized {
     fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {

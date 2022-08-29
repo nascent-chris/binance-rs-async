@@ -1,9 +1,5 @@
-use crate::client::*;
-use crate::errors::*;
-use crate::rest_model::*;
-use crate::util::*;
+use crate::{client::*, errors::*, rest_model::*, util::*};
 use serde_json::Value;
-// use std::collections::BTreeMap;
 
 static API_V3_DEPTH: &str = "/api/v3/depth";
 static API_V3_TICKER_PRICE: &str = "/api/v3/ticker/price";

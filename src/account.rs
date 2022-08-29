@@ -1,7 +1,4 @@
-use crate::client::*;
-use crate::errors::*;
-use crate::rest_model::*;
-use crate::util::*;
+use crate::{client::*, errors::*, rest_model::*, util::*};
 
 static API_V3_ACCOUNT: &str = "/api/v3/account";
 static API_V3_OPEN_ORDERS: &str = "/api/v3/openOrders";

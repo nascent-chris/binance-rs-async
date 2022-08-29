@@ -1,15 +1,14 @@
 #[macro_use]
 extern crate tokio;
 
-use binance::api::*;
-use binance::userstream::*;
-use binance::websockets::*;
-use binance::ws_model::{CombinedStreamEvent, WebsocketEvent, WebsocketEventUntag};
-use futures::future::BoxFuture;
-use futures::stream::StreamExt;
+use binance::{api::*,
+              userstream::*,
+              websockets::*,
+              ws_model::{CombinedStreamEvent, WebsocketEvent, WebsocketEventUntag}};
+use futures::{future::BoxFuture, stream::StreamExt};
 use serde_json::from_str;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::RwLock;
+use std::sync::{atomic::{AtomicBool, Ordering},
+                RwLock};
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_tungstenite::tungstenite::Message;
 

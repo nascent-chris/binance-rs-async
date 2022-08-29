@@ -1,6 +1,4 @@
-use crate::client::*;
-use crate::errors::*;
-use crate::rest_model::*;
+use crate::{client::*, errors::*, rest_model::*};
 
 static USER_DATA_STREAM: &str = "/api/v3/userDataStream";
 

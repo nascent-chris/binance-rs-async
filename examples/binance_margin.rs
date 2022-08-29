@@ -15,11 +15,7 @@ async fn main() {
 
 #[cfg(feature = "margin_api")]
 async fn margin_query() {
-    use binance::api::*;
-    use binance::bool_to_string_some;
-    use binance::config::Config;
-    use binance::margin::Margin;
-    use binance::rest_model::*;
+    use binance::{api::*, bool_to_string_some, config::Config, margin::Margin, rest_model::*};
     use chrono::{Duration, Utc};
     use std::ops::Sub;
 
@@ -155,10 +151,7 @@ async fn margin_query() {
 #[allow(dead_code)]
 #[cfg(feature = "margin_api")]
 async fn margin_post() {
-    use binance::api::*;
-    use binance::config::Config;
-    use binance::margin::Margin;
-    use binance::rest_model::*;
+    use binance::{api::*, config::Config, margin::Margin, rest_model::*};
 
     eprintln!("----------- Margin POST queries ----------");
     let margin: Margin = Binance::new_with_env(&Config::testnet());

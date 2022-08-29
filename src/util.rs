@@ -6,7 +6,6 @@ use serde_json::Value;
 
 use crate::errors::*;
 
-// pub fn build_request(parameters: &BTreeMap<String, String>) -> String {
 pub fn build_request(parameters: impl IntoIterator<Item = (impl AsRef<str>, impl AsRef<str>)>) -> String {
     parameters
         .into_iter()

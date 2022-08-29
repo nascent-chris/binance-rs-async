@@ -1,7 +1,4 @@
-use crate::client::*;
-use crate::errors::*;
-use crate::rest_model::*;
-use crate::util::bool_to_string;
+use crate::{client::*, errors::*, rest_model::*, util::bool_to_string};
 
 static SAPI_V1_MARGIN_TRANSFER: &str = "/sapi/v1/margin/transfer";
 static SAPI_V1_MARGIN_ISOLATED_TRANSFER: &str = "/sapi/v1/margin/isolated/transfer";

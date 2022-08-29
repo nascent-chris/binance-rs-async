@@ -1,10 +1,6 @@
-use crate::client::*;
-use crate::errors::*;
-use crate::rest_model::*;
-use chrono::DateTime;
-use chrono::{Duration, Utc};
-use std::collections::HashMap;
-use std::ops::Sub;
+use crate::{client::*, errors::*, rest_model::*};
+use chrono::{DateTime, Duration, Utc};
+use std::{collections::HashMap, ops::Sub};
 
 static SAPI_V1_SYSTEM_STATUS: &str = "/sapi/v1/system/status";
 static SAPI_V1_CAPITAL_CONFIG_GETALL: &str = "/sapi/v1/capital/config/getall";

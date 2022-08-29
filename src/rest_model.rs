@@ -1118,7 +1118,7 @@ pub struct MarginOrderState {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct OrderSumaryState {
+pub struct OrderSummaryState {
     pub id: u64,
     pub price: f64,
     pub qty: f64,

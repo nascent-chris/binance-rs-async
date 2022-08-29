@@ -2,16 +2,13 @@ use std::time::Duration;
 
 use boolinator::Boolinator;
 use hex::encode as hex_encode;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT};
-use reqwest::Response;
-use reqwest::StatusCode;
+use reqwest::{header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT},
+              Response, StatusCode};
 use ring::hmac;
-use serde::de;
-use serde::de::DeserializeOwned;
+use serde::{de, de::DeserializeOwned};
 
-use crate::errors::error_messages;
-use crate::errors::*;
-use crate::util::{build_request_p, build_signed_request_p};
+use crate::{errors::{error_messages, *},
+            util::{build_request_p, build_signed_request_p}};
 
 #[derive(Clone)]
 pub struct Client {

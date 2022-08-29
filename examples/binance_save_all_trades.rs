@@ -1,10 +1,7 @@
 use csv::Writer;
-use std::error::Error;
-use std::fs::File;
-use std::sync::atomic::AtomicBool;
+use std::{error::Error, fs::File, sync::atomic::AtomicBool};
 
-use binance::websockets::*;
-use binance::ws_model::WebsocketEvent;
+use binance::{websockets::*, ws_model::WebsocketEvent};
 
 #[tokio::main]
 async fn main() { save_all_trades_websocket().await; }
