@@ -492,13 +492,17 @@ pub enum SideEffectType {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum OrderSide {
+    #[serde(alias = "buy")]
     Buy,
+    #[serde(alias = "sell")]
     Sell,
 }
 
 /// By default, buy
 impl Default for OrderSide {
-    fn default() -> Self { Self::Buy }
+    fn default() -> Self {
+        Self::Buy
+    }
 }
 
 /// Order types, the following restrictions apply
@@ -512,12 +516,19 @@ impl Default for OrderSide {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum OrderType {
+    #[serde(alias = "limit")]
     Limit,
+    #[serde(alias = "market")]
     Market,
+    #[serde(alias = "stoploss")]
     StopLoss,
+    #[serde(alias = "stoplosslimit")]
     StopLossLimit,
+    #[serde(alias = "takeprofit")]
     TakeProfit,
+    #[serde(alias = "takeprofitlimit")]
     TakeProfitLimit,
+    #[serde(alias = "limitmaker")]
     LimitMaker,
     #[serde(other)]
     Other,
@@ -525,7 +536,9 @@ pub enum OrderType {
 
 /// By default, use market orders
 impl Default for OrderType {
-    fn default() -> Self { Self::Market }
+    fn default() -> Self {
+        Self::Market
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
