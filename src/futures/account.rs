@@ -2,11 +2,13 @@ use std::fmt;
 
 use serde::Serializer;
 
-use crate::{account::OrderCancellation,
-            client::Client,
-            errors::*,
-            rest_model::{OrderSide, PairAndWindowQuery, PairQuery, TimeInForce},
-            util::*};
+use crate::{
+    account::OrderCancellation,
+    client::Client,
+    errors::*,
+    rest_model::{OrderSide, PairAndWindowQuery, PairQuery, TimeInForce},
+    util::*,
+};
 
 use super::rest_model::{AccountBalance, CanceledOrder, ChangeLeverageResponse, OrderType, Position, Transaction};
 
@@ -16,7 +18,7 @@ pub struct FuturesAccount {
     pub recv_window: u64,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum PositionSide {
     Both,
@@ -24,7 +26,7 @@ pub enum PositionSide {
     Short,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub enum WorkingType {
     MarkPrice,
@@ -56,7 +58,7 @@ where
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct OrderRequest {
+pub struct OrderRequest {
     pub symbol: String,
     pub side: OrderSide,
     pub position_side: Option<PositionSide>,
@@ -84,7 +86,7 @@ struct ChangePositionModeRequest {
 }
 
 impl FuturesAccount {
-    async fn post_order(&self, order: OrderRequest) -> Result<Transaction> {
+    pub async fn post_order(&self, order: OrderRequest) -> Result<Transaction> {
         self.client
             .post_signed_p("/fapi/v1/order", order, self.recv_window)
             .await
