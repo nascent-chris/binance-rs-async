@@ -3,25 +3,25 @@ use crate::rest_model::{string_or_float, Asks, Bids, OrderBook, OrderSide, Order
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "e")]
 pub enum WebsocketEvent {
-    #[serde(alias = "aggTrade")]
+    #[serde(rename = "aggTrade")]
     AggTrade(Box<TradesEvent>),
-    #[serde(alias = "trade")]
+    #[serde(rename = "trade")]
     Trade(Box<TradeEvent>),
-    #[serde(alias = "kline")]
+    #[serde(rename = "kline")]
     Kline(Box<KlineEvent>),
-    #[serde(alias = "24hrTicker")]
+    #[serde(rename = "24hrTicker")]
     DayTicker(Box<DayTickerEvent>),
-    #[serde(alias = "24hrMiniTicker")]
+    #[serde(rename = "24hrMiniTicker")]
     DayMiniTicker(Box<MiniDayTickerEvent>),
-    #[serde(alias = "depthUpdate")]
+    #[serde(rename = "depthUpdate")]
     DepthOrderBook(Box<DepthOrderBookEvent>),
-    #[serde(alias = "outboundAccountPosition")]
+    #[serde(rename = "outboundAccountPosition")]
     AccountPositionUpdate(Box<AccountPositionUpdate>),
-    #[serde(alias = "balanceUpdate")]
+    #[serde(rename = "balanceUpdate")]
     BalanceUpdate(Box<BalanceUpdate>),
-    #[serde(alias = "executionReport")]
+    #[serde(rename = "executionReport")]
     OrderUpdate(Box<OrderUpdate>),
-    #[serde(alias = "listStatus")]
+    #[serde(rename = "listStatus")]
     ListOrderUpdate(Box<OrderListUpdate>),
 }
 
