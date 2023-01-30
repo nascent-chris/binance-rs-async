@@ -1,8 +1,9 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use futures::StreamExt;
+use serde::de::DeserializeOwned;
 use serde_json::from_str;
-use tokio::net::TcpStream;
+use tokio::{net::TcpStream, task::JoinHandle};
 use tokio_tungstenite::{
     connect_async,
     tungstenite::{handshake::client::Response, Message},
@@ -28,23 +29,23 @@ pub fn all_ticker_stream() -> &'static str {
 }
 
 pub fn ticker_stream(symbol: &str) -> String {
-    format!("{}@ticker", symbol)
+    format!("{symbol}@ticker")
 }
 
 pub fn agg_trade_stream(symbol: &str) -> String {
-    format!("{}@aggTrade", symbol)
+    format!("{symbol}@aggTrade")
 }
 
 pub fn trade_stream(symbol: &str) -> String {
-    format!("{}@trade", symbol)
+    format!("{symbol}@trade")
 }
 
 pub fn kline_stream(symbol: &str, interval: &str) -> String {
-    format!("{}@kline_{}", symbol, interval)
+    format!("{symbol}@kline_{interval}")
 }
 
 pub fn book_ticker_stream(symbol: &str) -> String {
-    format!("{}@bookTicker", symbol)
+    format!("{symbol}@bookTicker")
 }
 
 pub fn all_book_ticker_stream() -> &'static str {
@@ -56,7 +57,7 @@ pub fn all_mini_ticker_stream() -> &'static str {
 }
 
 pub fn mini_ticker_stream(symbol: &str) -> String {
-    format!("{}@miniTicker", symbol)
+    format!("{symbol}@miniTicker")
 }
 
 /// # Arguments
@@ -73,7 +74,7 @@ pub fn partial_book_depth_stream(symbol: &str, levels: u16, update_speed: u16) -
 /// * `symbol`: the market symbol
 /// * `update_speed`: 1000 or 100
 pub fn diff_book_depth_stream(symbol: &str, update_speed: u16) -> String {
-    format!("{}@depth@{}ms", symbol, update_speed)
+    format!("{symbol}@depth@{update_speed}ms")
 }
 
 fn combined_stream(streams: Vec<String>) -> String {
@@ -137,6 +138,8 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
         match connect_async(url).await {
             Ok(answer) => {
                 self.socket = Some(answer);
+
+                // TODO: add keepalive
                 Ok(())
             }
             Err(e) => Err(Error::Msg(format!("Error during handshake {}", e))),
@@ -159,28 +162,78 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
 
     pub async fn event_loop(&mut self, running: &AtomicBool) -> Result<()> {
         while running.load(Ordering::Relaxed) {
-            if let Some((ref mut socket, _)) = self.socket {
-                // TODO: return error instead of panic?
-                let message = socket
+            if let Some((ws, _)) = self.socket.as_mut() {
+                let message = ws
                     .next()
                     .await
-                    .ok_or_else(|| Error::Msg(format!("empty socket msg")))??;
+                    .ok_or_else(|| Error::Msg("Disconnected".to_string()))
+                    .and_then(|r| Ok(r?));
 
                 match message {
-                    Message::Text(msg) => {
+                    Ok(Message::Text(msg)) => {
                         if msg.is_empty() {
-                            return Ok(());
+                            // return Ok(());
                         }
-                        let event: WE = from_str(msg.as_str())?;
-                        (self.handler)(event)?;
+                        let event_res: std::result::Result<WE, _> = from_str(msg.as_str());
+                        match event_res {
+                            Ok(event) => {
+                                (self.handler)(event)?;
+                            }
+                            Err(_) => {
+                                // return Err(Error::Msg(format!("Error during parsing {e}")));
+                            }
+                        }
                     }
-                    Message::Ping(_) | Message::Pong(_) | Message::Binary(_) => {}
-                    Message::Close(e) => {
-                        return Err(Error::Msg(format!("Disconnected {:?}", e)));
+                    // Message::Ping(_) | Message::Pong(_) | Message::Binary(_) | Message::Frame(_) => {}
+                    Ok(Message::Close(e)) => {
+                        return Err(Error::Msg(format!("Disconnected {e:?}")));
+                    }
+                    Ok(_) => {}
+                    Err(e) => {
+                        return Err(Error::Msg(format!("Error during message {e}")));
                     }
                 }
             }
         }
         Ok(())
+    }
+}
+
+pub struct WebsocketImproved {
+    pub socket: (WebSocketStream<MaybeTlsStream<TcpStream>>, Response),
+    conf: Config,
+}
+
+impl WebsocketImproved {
+    /// Connect to a websocket endpoint
+    pub async fn connect(listen_key: &str, conf: Option<Config>) -> Result<Self> {
+        let conf = conf.unwrap_or_default();
+        let wss = format!("{}/{}/{}", conf.ws_endpoint, WS_ENDPOINT, listen_key);
+        let url = Url::parse(&wss)?;
+
+        Ok(connect_async(url).await.map(|socket| Self { socket, conf })?)
+    }
+
+    pub fn start_streaming<WsItemT, F, R, E>(self, callback: F) -> Result<JoinHandle<()>>
+    where
+        WsItemT: DeserializeOwned,
+
+        F: Fn(Result<WsItemT>) -> std::result::Result<R, E> + Send + 'static,
+    {
+        let (ws, _) = self.socket;
+
+        let handle = tokio::task::spawn(async move {
+            let mut stream = ws.map(|msg| match msg? {
+                Message::Text(msg) => Ok(from_str::<WsItemT>(&msg)?),
+                Message::Close(e) => Err(Error::Msg(format!("Disconnected {e:?}"))),
+                m => Err(Error::Msg(format!("unexpected message {m:?}"))),
+            });
+
+            while let Some(res_item) = stream.next().await {
+                let res = callback(res_item);
+            }
+        });
+
+        Ok(handle)
     }
 }

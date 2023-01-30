@@ -9,6 +9,12 @@ pub struct Config {
     pub recv_window: u64,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Config::default()
+    }
+}
+
 impl Config {
     /// Configure binance with default production endpoints
     /// # Examples
