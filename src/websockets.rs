@@ -266,12 +266,13 @@ impl WebsocketImproved {
         Ok(handle)
     }
 
-    pub fn start_streaming_async<WsItemT, F, E, T, OtherT>(self, callback: F, o: OtherT) -> Result<JoinHandle<()>>
+    /// If the callback returns an error, the stream will be stopped
+    pub fn start_streaming_async<WsItemT, F, E, T, ParamT>(self, callback: F, param: ParamT) -> Result<JoinHandle<()>>
     where
         WsItemT: DeserializeOwned + Send,
-        F: Fn(Result<WsItemT>, OtherT) -> T + Send + Sync + 'static,
+        F: Fn(Result<WsItemT>, ParamT) -> T + Send + Sync + 'static,
         T: Future<Output = std::result::Result<(), E>> + Send,
-        OtherT: Send + Sync + Clone + 'static,
+        ParamT: Send + Sync + Clone + 'static,
     {
         let (ws, _) = self.socket;
 
@@ -283,9 +284,8 @@ impl WebsocketImproved {
             while let Some(msg) = stream.next().await {
                 match msg {
                     Ok(Message::Text(msg)) => {
-                        // println!("msg: {}", msg);
-                        let m = from_str::<WsItemT>(&msg).map_err(Into::into);
-                        if let Err(_) = callback(m, o.clone()).await {
+                        let deserialize_res = from_str::<WsItemT>(&msg).map_err(Into::into);
+                        if let Err(_) = callback(deserialize_res, param.clone()).await {
                             // if the callback returns an error, we should stop the loop
                             break;
                         }
@@ -294,7 +294,7 @@ impl WebsocketImproved {
                         break;
                     }
                     Ok(Message::Ping(v)) => {
-                        let res = ws_write.send(Message::Pong(v)).await;
+                        let _res = ws_write.send(Message::Pong(v)).await;
                     }
                     Ok(m) => {
                         println!("unexpected message {m:?}");
