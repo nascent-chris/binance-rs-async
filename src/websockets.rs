@@ -214,11 +214,20 @@ impl WebsocketImproved {
         Ok(connect_async(url).await.map(|socket| Self { socket, conf })?)
     }
 
-    pub fn start_streaming<WsItemT, F, R, E>(self, callback: F) -> Result<JoinHandle<()>>
+    /// Connect to a futures websocket endpoint
+    pub async fn connect_futures(listen_key: &str, conf: Option<Config>) -> Result<Self> {
+        let conf = conf.unwrap_or_default();
+        let wss = format!("{}/{}/{}", conf.futures_ws_endpoint, WS_ENDPOINT, listen_key);
+        let url = Url::parse(&wss)?;
+
+        Ok(connect_async(url).await.map(|socket| Self { socket, conf })?)
+    }
+
+    pub fn start_streaming<WsItemT, F, E>(self, callback: F) -> Result<JoinHandle<()>>
     where
         WsItemT: DeserializeOwned,
 
-        F: Fn(Result<WsItemT>) -> std::result::Result<R, E> + Send + 'static,
+        F: Fn(Result<WsItemT>) -> std::result::Result<(), E> + Send + 'static,
     {
         let (ws, _) = self.socket;
 
@@ -232,19 +241,19 @@ impl WebsocketImproved {
                     Ok(Message::Text(msg)) => {
                         println!("msg: {}", msg);
                         let m = from_str::<WsItemT>(&msg).map_err(Into::into);
-                        if let Err(e) = callback(m) {
+                        if let Err(_) = callback(m) {
                             // if the callback returns an error, we should stop the loop
                             break;
                         }
                     }
-                    Ok(Message::Close(e)) => {
+                    Ok(Message::Close(_maybe_frame)) => {
                         break;
                     }
                     Ok(Message::Ping(v)) => {
                         let res = ws_write.send(Message::Pong(v)).await;
                     }
                     Ok(m) => {
-                        println!("unexpected message2 {m:?}");
+                        println!("unexpected message {m:?}");
                     }
 
                     Err(e) => {
