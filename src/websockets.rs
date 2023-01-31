@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use futures::StreamExt;
+use futures::{SinkExt, StreamExt};
 use serde::de::DeserializeOwned;
 use serde_json::from_str;
 use tokio::{net::TcpStream, task::JoinHandle};
@@ -222,15 +222,36 @@ impl WebsocketImproved {
     {
         let (ws, _) = self.socket;
 
-        let handle = tokio::task::spawn(async move {
-            let mut stream = ws.map(|msg| match msg? {
-                Message::Text(msg) => Ok(from_str::<WsItemT>(&msg)?),
-                Message::Close(e) => Err(Error::Msg(format!("Disconnected {e:?}"))),
-                m => Err(Error::Msg(format!("unexpected message {m:?}"))),
-            });
+        let (mut ws_write, ws_read) = ws.split();
 
-            while let Some(res_item) = stream.next().await {
-                let res = callback(res_item);
+        let handle = tokio::task::spawn(async move {
+            let mut stream = ws_read; //.map_err(|e| Error::Msg(format!("Error {e}")));
+
+            while let Some(msg) = stream.next().await {
+                match msg {
+                    Ok(Message::Text(msg)) => {
+                        println!("msg: {}", msg);
+                        let m = from_str::<WsItemT>(&msg).map_err(Into::into);
+                        if let Err(e) = callback(m) {
+                            // if the callback returns an error, we should stop the loop
+                            break;
+                        }
+                    }
+                    Ok(Message::Close(e)) => {
+                        break;
+                    }
+                    Ok(Message::Ping(v)) => {
+                        let res = ws_write.send(Message::Pong(v)).await;
+                    }
+                    Ok(m) => {
+                        println!("unexpected message2 {m:?}");
+                    }
+
+                    Err(e) => {
+                        println!("error {e}");
+                        break;
+                    }
+                }
             }
         });
 
