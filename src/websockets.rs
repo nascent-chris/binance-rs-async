@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use futures::{SinkExt, StreamExt};
+use futures::{Future, SinkExt, StreamExt};
 use serde::de::DeserializeOwned;
 use serde_json::from_str;
 use tokio::{net::TcpStream, task::JoinHandle};
@@ -226,7 +226,6 @@ impl WebsocketImproved {
     pub fn start_streaming<WsItemT, F, E>(self, callback: F) -> Result<JoinHandle<()>>
     where
         WsItemT: DeserializeOwned,
-
         F: Fn(Result<WsItemT>) -> std::result::Result<(), E> + Send + 'static,
     {
         let (ws, _) = self.socket;
@@ -239,9 +238,54 @@ impl WebsocketImproved {
             while let Some(msg) = stream.next().await {
                 match msg {
                     Ok(Message::Text(msg)) => {
-                        println!("msg: {}", msg);
+                        // println!("msg: {}", msg);
                         let m = from_str::<WsItemT>(&msg).map_err(Into::into);
                         if let Err(_) = callback(m) {
+                            // if the callback returns an error, we should stop the loop
+                            break;
+                        }
+                    }
+                    Ok(Message::Close(_maybe_frame)) => {
+                        break;
+                    }
+                    Ok(Message::Ping(v)) => {
+                        let res = ws_write.send(Message::Pong(v)).await;
+                    }
+                    Ok(m) => {
+                        println!("unexpected message {m:?}");
+                    }
+
+                    Err(e) => {
+                        println!("error {e}");
+                        break;
+                    }
+                }
+            }
+        });
+
+        Ok(handle)
+    }
+
+    pub fn start_streaming_async<WsItemT, F, E, T, OtherT>(self, callback: F, o: OtherT) -> Result<JoinHandle<()>>
+    where
+        WsItemT: DeserializeOwned + Send,
+        F: Fn(Result<WsItemT>, OtherT) -> T + Send + Sync + 'static,
+        T: Future<Output = std::result::Result<(), E>> + Send,
+        OtherT: Send + Sync + Clone + 'static,
+    {
+        let (ws, _) = self.socket;
+
+        let (mut ws_write, ws_read) = ws.split();
+
+        let handle = tokio::task::spawn(async move {
+            let mut stream = ws_read; //.map_err(|e| Error::Msg(format!("Error {e}")));
+
+            while let Some(msg) = stream.next().await {
+                match msg {
+                    Ok(Message::Text(msg)) => {
+                        // println!("msg: {}", msg);
+                        let m = from_str::<WsItemT>(&msg).map_err(Into::into);
+                        if let Err(_) = callback(m, o.clone()).await {
                             // if the callback returns an error, we should stop the loop
                             break;
                         }
