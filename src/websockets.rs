@@ -1,4 +1,7 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 use futures::{Future, SinkExt, StreamExt};
 use serde::de::DeserializeOwned;
@@ -223,51 +226,13 @@ impl WebsocketImproved {
         Ok(connect_async(url).await.map(|socket| Self { socket, conf })?)
     }
 
-    pub fn start_streaming<WsItemT, F, E>(self, callback: F) -> Result<JoinHandle<()>>
-    where
-        WsItemT: DeserializeOwned,
-        F: Fn(Result<WsItemT>) -> std::result::Result<(), E> + Send + 'static,
-    {
-        let (ws, _) = self.socket;
-
-        let (mut ws_write, ws_read) = ws.split();
-
-        let handle = tokio::task::spawn(async move {
-            let mut stream = ws_read; //.map_err(|e| Error::Msg(format!("Error {e}")));
-
-            while let Some(msg) = stream.next().await {
-                match msg {
-                    Ok(Message::Text(msg)) => {
-                        // println!("msg: {}", msg);
-                        let m = from_str::<WsItemT>(&msg).map_err(Into::into);
-                        if let Err(_) = callback(m) {
-                            // if the callback returns an error, we should stop the loop
-                            break;
-                        }
-                    }
-                    Ok(Message::Close(_maybe_frame)) => {
-                        break;
-                    }
-                    Ok(Message::Ping(v)) => {
-                        let res = ws_write.send(Message::Pong(v)).await;
-                    }
-                    Ok(m) => {
-                        println!("unexpected message {m:?}");
-                    }
-
-                    Err(e) => {
-                        println!("error {e}");
-                        break;
-                    }
-                }
-            }
-        });
-
-        Ok(handle)
-    }
-
     /// If the callback returns an error, the stream will be stopped
-    pub fn start_streaming_async<WsItemT, F, E, T, ParamT>(self, callback: F, param: ParamT) -> Result<JoinHandle<()>>
+    pub fn start_streaming_async<WsItemT, F, E, T, ParamT>(
+        self,
+        callback: F,
+        param: ParamT,
+        should_stop: Arc<AtomicBool>,
+    ) -> Result<JoinHandle<()>>
     where
         WsItemT: DeserializeOwned + Send,
         F: Fn(Result<WsItemT>, ParamT) -> T + Send + Sync + 'static,
@@ -282,15 +247,21 @@ impl WebsocketImproved {
             let mut stream = ws_read; //.map_err(|e| Error::Msg(format!("Error {e}")));
 
             while let Some(msg) = stream.next().await {
+                // TODO: this will wait for the stream to get a message, we should refactor this
+                if should_stop.load(Ordering::Relaxed) {
+                    break;
+                }
                 match msg {
                     Ok(Message::Text(msg)) => {
                         let deserialize_res = from_str::<WsItemT>(&msg).map_err(Into::into);
                         if let Err(_) = callback(deserialize_res, param.clone()).await {
                             // if the callback returns an error, we should stop the loop
+                            should_stop.store(true, Ordering::Relaxed);
                             break;
                         }
                     }
                     Ok(Message::Close(_maybe_frame)) => {
+                        should_stop.store(true, Ordering::Relaxed);
                         break;
                     }
                     Ok(Message::Ping(v)) => {
@@ -302,7 +273,7 @@ impl WebsocketImproved {
 
                     Err(e) => {
                         println!("error {e}");
-                        break;
+                        should_stop.store(true, Ordering::Relaxed);
                     }
                 }
             }
