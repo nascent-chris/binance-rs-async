@@ -202,6 +202,7 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
     }
 }
 
+#[derive(Debug)]
 pub struct WebsocketImproved {
     pub socket: (WebSocketStream<MaybeTlsStream<TcpStream>>, Response),
     conf: Config,
