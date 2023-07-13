@@ -6,6 +6,7 @@ use serde_json::Value;
 
 use crate::errors::*;
 
+// pub fn build_request(parameters: &BTreeMap<String, String>) -> String {
 pub fn build_request(parameters: impl IntoIterator<Item = (impl AsRef<str>, impl AsRef<str>)>) -> String {
     parameters
         .into_iter()
@@ -32,7 +33,7 @@ pub fn build_signed_request(
         Some(("timestamp", get_timestamp()?)),
     ])
     .flatten()
-    .map(|(k, v)| format!("{}={}", k, v))
+    .map(|(k, v)| format!("{k}={v}"))
     .chain(
         parameters
             .into_iter()
@@ -58,14 +59,14 @@ where
         Some(("timestamp", get_timestamp()?)),
     ])
     .flatten()
-    .map(|(k, v)| format!("{}={}", k, v))
+    .map(|(k, v)| format!("{k}={v}"))
     .collect::<Vec<String>>()
     .join("&");
 
     let request = if query_string.is_empty() {
         s
     } else {
-        format!("{}&{}", s, query_string)
+        format!("{s}&{query_string}")
     };
     Ok(request)
 }

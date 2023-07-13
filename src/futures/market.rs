@@ -1,15 +1,15 @@
+use crate::client::*;
+use crate::errors::*;
+use crate::futures::rest_model::*;
+use crate::rest_model::{
+    BookTickers, KlineSummaries, KlineSummary, PairAndWindowQuery, PairQuery, SymbolPrice, Tickers,
+};
+use crate::util::*;
 use serde_json::Value;
 
-use crate::{client::*,
-            errors::*,
-            futures::rest_model::*,
-            rest_model::{BookTickers, KlineSummaries, KlineSummary, PairAndWindowQuery, PairQuery, SymbolPrice,
-                         Tickers},
-            util::*};
-
-//TODO: Validate intervals and start/end times in history queries
-//TODO: find out the repartition of kline/candlestick columns in the future kline rows
-//TODO: make limit optional where applicable
+//TODO : Validate intervals and start/end times in history queries
+//TODO : find out the repartition of kline/candlestick columns in the future kline rows
+//TODO : make limit optional where applicable
 
 #[derive(Clone)]
 pub struct FuturesMarket {
@@ -96,7 +96,7 @@ impl FuturesMarket {
     }
 
     /// Get funding rate history
-    pub async fn get_funding_rate<S1, S2, S3, S4, S5>(
+    pub async fn get_funding_rate<S1, S3, S4, S5>(
         &self,
         symbol: S1,
         start_time: S3,
@@ -532,7 +532,21 @@ impl FuturesMarket {
             .await
     }
 
-    pub async fn get_mark_prices(&self) -> Result<MarkPrices> { self.client.get_p("/fapi/v1/premiumIndex", None).await }
+    pub async fn get_mark_prices(&self, symbol: Option<String>) -> Result<Vec<MarkPrice>> {
+        if let Some(symbol) = symbol {
+            Ok(vec![
+                self.client
+                    .get_d::<MarkPrice, PairQuery>("/fapi/v1/premiumIndex", Some(PairQuery { symbol }))
+                    .await?,
+            ])
+        } else {
+            self.client.get_p("/fapi/v1/premiumIndex", None).await
+        }
+    }
+
+    pub async fn get_all_liquidation_orders(&self) -> Result<LiquidationOrders> {
+        self.client.get_p("/fapi/v1/allForceOrders", None).await
+    }
 
     pub async fn open_interest<S>(&self, symbol: S) -> Result<OpenInterest>
     where

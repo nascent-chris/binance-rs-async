@@ -11,6 +11,8 @@ async fn main() {
     general().await;
     #[cfg(feature = "futures_api")]
     market_data().await;
+    #[cfg(feature = "futures_api")]
+    account().await;
 }
 
 #[cfg(feature = "futures_api")]
@@ -96,13 +98,32 @@ async fn market_data() {
         Err(e) => error!("Error: {:?}", e),
     }
 
-    match market.get_mark_prices().await {
-        Ok(MarkPrices::AllMarkPrices(answer)) => info!("First mark Prices: {:?}", answer[0]),
+    match market.get_mark_prices(Some("btcusdt".into())).await {
+        Ok(answer) => info!("First mark Prices: {:?}", answer[0]),
         Err(e) => info!("Error: {:?}", e),
     }
 
     match market.open_interest("btcusdt").await {
         Ok(answer) => info!("Open interest: {:?}", answer),
+        Err(e) => error!("Error: {:?}", e),
+    }
+
+    match market.get_funding_rate("BTCUSDT", None, None, 10u16).await {
+        Ok(answer) => info!("Funding: {:?}", answer),
+        Err(e) => error!("Error: {:?}", e),
+    }
+}
+
+#[cfg(feature = "futures_api")]
+async fn account() {
+    use binance::{api::Binance, config::Config, futures::account::FuturesAccount};
+    let api_key = Some("".into());
+    let secret_key = Some("".into());
+
+    let account = FuturesAccount::new_with_config(api_key, secret_key, &Config::testnet());
+
+    match account.account_information().await {
+        Ok(answer) => info!("Account Info: {:?}", answer),
         Err(e) => error!("Error: {:?}", e),
     }
 }

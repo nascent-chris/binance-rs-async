@@ -43,13 +43,13 @@ async fn general() {
     let result = general.get_server_time().await;
     match result {
         Ok(answer) => info!("Server Time: {}", answer.server_time),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     let result = general.exchange_info().await;
     match result {
         Ok(answer) => info!("Exchange information: {:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 }
 
@@ -60,12 +60,12 @@ async fn account() {
     let SymbolPrice { price, .. } = market.get_price(symbol).await.unwrap();
     match account.get_account().await {
         Ok(answer) => info!("{:?}", answer.balances),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     match account.get_open_orders(symbol).await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     let limit_buy = OrderRequest {
@@ -79,7 +79,7 @@ async fn account() {
     };
     match account.place_order(limit_buy).await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     let market_buy = OrderRequest {
@@ -91,7 +91,7 @@ async fn account() {
     };
     match account.place_order(market_buy).await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     let limit_sell = OrderRequest {
@@ -105,7 +105,7 @@ async fn account() {
     };
     match account.place_order(limit_sell).await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     let market_sell = OrderRequest {
@@ -117,7 +117,7 @@ async fn account() {
     };
     match account.place_order(market_sell).await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     let order_id = 1_957_528;
@@ -129,7 +129,7 @@ async fn account() {
 
     match account.order_status(order_status).await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     let order_cancellation = OrderCancellation {
@@ -140,17 +140,17 @@ async fn account() {
 
     match account.cancel_order(order_cancellation).await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     match account.get_balance("BTC").await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     match account.trade_history(symbol).await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 }
 
@@ -160,37 +160,37 @@ async fn market_data() {
     // Order book
     match market.get_depth("BNBETH").await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     // Latest price for ALL symbols
     match market.get_all_prices().await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     // Latest price for ONE symbol
     match market.get_price("KNCETH").await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     // Current average price for ONE symbol
     match market.get_average_price("KNCETH").await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     // Best price/qty on the order book for ALL symbols
     match market.get_all_book_tickers().await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     // Best price/qty on the order book for ONE symbol
     match market.get_book_ticker("BNBETH").await {
         Ok(answer) => info!("Bid Price: {}, Ask Price: {}", answer.bid_price, answer.ask_price),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     // 24hr ticker price change statistics
@@ -199,13 +199,13 @@ async fn market_data() {
             "Open Price: {}, Higher Price: {}, Lower Price: {:?}",
             answer.open_price, answer.high_price, answer.low_price
         ),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     // last 10 5min klines (candlesticks) for a symbol:
     match market.get_klines("BNBETH", "5m", 10, None, None).await {
         Ok(answer) => info!("{:?}", answer),
-        Err(e) => error!("Error: {}", e),
+        Err(e) => error!("Error: {e}"),
     }
 
     // 10 latest (aggregated) trades
@@ -219,6 +219,6 @@ async fn market_data() {
                 trade.price
             )
         }
-        Err(e) => println!("Error: {}", e),
+        Err(e) => println!("Error: {e}"),
     }
 }

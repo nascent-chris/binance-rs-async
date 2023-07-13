@@ -69,7 +69,7 @@ pub fn mini_ticker_stream(symbol: &str) -> String {
 /// * `levels`: 5, 10 or 20
 /// * `update_speed`: 1000 or 100
 pub fn partial_book_depth_stream(symbol: &str, levels: u16, update_speed: u16) -> String {
-    format!("{}@depth{}@{}ms", symbol, levels, update_speed)
+    format!("{symbol}@depth{levels}@{update_speed}ms")
 }
 
 /// # Arguments
@@ -124,13 +124,7 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
             .push(STREAM_ENDPOINT);
         url.set_query(Some(&format!("streams={}", combined_stream(endpoints))));
 
-        match connect_async(url).await {
-            Ok(answer) => {
-                self.socket = Some(answer);
-                Ok(())
-            }
-            Err(e) => Err(Error::Msg(format!("Error during handshake {}", e))),
-        }
+        self.handle_connect(url).await
     }
 
     /// Connect to a websocket endpoint
@@ -138,6 +132,10 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
         let wss: String = format!("{}/{}/{}", self.conf.ws_endpoint, WS_ENDPOINT, endpoint);
         let url = Url::parse(&wss)?;
 
+        self.handle_connect(url).await
+    }
+
+    async fn handle_connect(&mut self, url: Url) -> Result<()> {
         match connect_async(url).await {
             Ok(answer) => {
                 self.socket = Some(answer);
@@ -145,7 +143,7 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
                 // TODO: add keepalive
                 Ok(())
             }
-            Err(e) => Err(Error::Msg(format!("Error during handshake {}", e))),
+            Err(e) => Err(Error::Msg(format!("Error during handshake {e}"))),
         }
     }
 

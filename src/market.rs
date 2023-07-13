@@ -1,5 +1,9 @@
-use crate::{client::*, errors::*, rest_model::*, util::*};
+use crate::client::*;
+use crate::errors::*;
+use crate::rest_model::*;
+use crate::util::*;
 use serde_json::Value;
+// use std::collections::BTreeMap;
 
 static API_V3_DEPTH: &str = "/api/v3/depth";
 static API_V3_TICKER_PRICE: &str = "/api/v3/ticker/price";
@@ -28,7 +32,8 @@ impl Market {
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let orderbook = tokio_test::block_on(market.get_depth("BTCUSDT".to_string()));
     /// assert!(orderbook.is_ok(), "{:?}", orderbook);
     /// ```
@@ -45,7 +50,8 @@ impl Market {
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let orderbook = tokio_test::block_on(market.get_custom_depth("BTCUSDT".to_string(), 50));
     /// assert!(orderbook.is_ok(), "{:?}", orderbook);
     /// let bids_len = orderbook.unwrap().bids.len();
@@ -64,7 +70,8 @@ impl Market {
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let prices = tokio_test::block_on(market.get_all_prices());
     /// assert!(prices.is_ok(), "{:?}", prices);
     /// ```
@@ -74,7 +81,8 @@ impl Market {
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let price = tokio_test::block_on(market.get_price("BTCUSDT"));
     /// assert!(price.is_ok(), "{:?}", price);
     /// ```
@@ -90,7 +98,8 @@ impl Market {
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let avg_price = tokio_test::block_on(market.get_average_price("BTCUSDT"));
     /// assert!(avg_price.is_ok(), "{:?}", avg_price);
     /// ```
@@ -107,7 +116,8 @@ impl Market {
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let tickers = tokio_test::block_on(market.get_all_book_tickers());
     /// assert!(tickers.is_ok(), "{:?}", tickers);
     /// ```
@@ -117,7 +127,8 @@ impl Market {
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let tickers = tokio_test::block_on(market.get_book_ticker("BTCUSDT"));
     /// assert!(tickers.is_ok(), "{:?}", tickers);
     /// ```
@@ -133,7 +144,8 @@ impl Market {
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let price_stats = tokio_test::block_on(market.get_24h_price_stats("BTCUSDT"));
     /// assert!(price_stats.is_ok(), "{:?}", price_stats);
     /// ```
@@ -151,7 +163,8 @@ impl Market {
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let agg_trades = tokio_test::block_on(market.get_agg_trades("BNBETH", None, None, None, Some(10)));
     /// assert!(agg_trades.is_ok(), "{:?}", agg_trades);
     /// ```
@@ -185,11 +198,12 @@ impl Market {
     }
 
     /// Returns up to 'limit' klines for given symbol and interval ("1m", "5m", ...)
-    /// https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
+    /// <https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data>
     /// # Examples
     /// ```rust
     /// use binance::{api::*, market::*, config::*};
-    /// let market: Market = Binance::new_with_env(&Config::default());
+    /// let conf = Config::default().set_rest_api_endpoint(DATA_REST_ENDPOINT);
+    /// let market: Market = Binance::new_with_env(&conf);
     /// let klines = tokio_test::block_on(market.get_klines("BTCUSDT", "1m", None, None, None));
     /// assert!(klines.is_ok(), "{:?}", klines);
     /// ```

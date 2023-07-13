@@ -1,4 +1,7 @@
-use crate::{client::*, errors::*, rest_model::*, util::bool_to_string};
+use crate::client::*;
+use crate::errors::*;
+use crate::rest_model::*;
+use crate::util::bool_to_string;
 
 static SAPI_V1_MARGIN_TRANSFER: &str = "/sapi/v1/margin/transfer";
 static SAPI_V1_MARGIN_ISOLATED_TRANSFER: &str = "/sapi/v1/margin/isolated/transfer";
@@ -32,7 +35,7 @@ static SAPI_V1_BNB_BURN: &str = "/sapi/v1/bnbBurn";
 static SAPI_V1_MARGIN_INTEREST_RATE_HISTORY: &str = "/sapi/v1/margin/interestRateHistory";
 
 /// This struct acts as a gateway for all margin endpoints.
-/// Preferably use the trait [`Binance`] to get an instance.
+/// Preferably use the trait [`crate::api::Binance`] to get an instance.
 #[derive(Clone)]
 pub struct Margin {
     pub client: Client,

@@ -7,7 +7,7 @@
 //! <br>
 //!
 //! This library provides access to all of Binance's APIs using .
-//! [`tokio`]: https://docs.rs/tokio/latest/tokio/
+//! [`tokio`]: <https://docs.rs/tokio/latest/tokio/>
 //!
 //! <br>
 //!
@@ -68,7 +68,8 @@ extern crate lazy_static;
 extern crate serde;
 extern crate serde_qs as qs;
 
-pub use util::{bool_to_string, bool_to_string_some};
+pub use util::bool_to_string;
+pub use util::bool_to_string_some;
 
 mod client;
 pub mod errors;

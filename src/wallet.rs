@@ -19,17 +19,19 @@ static SAPI_V1_ASSET_DUST: &str = "/sapi/v1/asset/dust";
 static SAPI_V1_ASSET_ASSETDIVIDEND: &str = "/sapi/v1/asset/assetDividend";
 static SAPI_V1_ASSET_ASSETDETAIL: &str = "/sapi/v1/asset/assetDetail";
 static SAPI_V1_ASSET_TRADEFEE: &str = "/sapi/v1/asset/tradeFee";
+static SAPI_V1_ASSET_TRADEFEE_US: &str = "/sapi/v1/asset/query/trading-fee";
 static SAPI_V1_ASSET_TRANSFER: &str = "/sapi/v1/asset/transfer";
 static SAPI_V1_ASSET_GETFUNDINGASSET: &str = "/sapi/v1/asset/get-funding-asset";
 static SAPI_V1_ASSET_APIRESTRICTIONS: &str = "/sapi/v1/account/apiRestrictions";
 static DEFAULT_WALLET_HISTORY_QUERY_INTERVAL_DAYS: i64 = 90;
 
 /// This struct acts as a gateway for all wallet endpoints.
-/// Preferably use the trait [`Binance`] to get an instance.
+/// Preferably use the trait [`crate::api::Binance`] to get an instance.
 #[derive(Clone)]
 pub struct Wallet {
     pub client: Client,
     pub recv_window: u64,
+    pub binance_us_api: bool,
 }
 
 impl Wallet {
@@ -163,9 +165,10 @@ impl Wallet {
     ) -> Result<Vec<RecordHistory<DepositRecord>>> {
         let mut result = vec![];
 
-        let total_duration = total_duration.unwrap_or(Duration::days(DEFAULT_WALLET_HISTORY_QUERY_INTERVAL_DAYS));
+        let total_duration =
+            total_duration.unwrap_or_else(|| Duration::days(DEFAULT_WALLET_HISTORY_QUERY_INTERVAL_DAYS));
         let interval_duration = Duration::days(DEFAULT_WALLET_HISTORY_QUERY_INTERVAL_DAYS);
-        let mut current_period_end: DateTime<Utc> = start_from.unwrap_or(Utc::now());
+        let mut current_period_end: DateTime<Utc> = start_from.unwrap_or_else(Utc::now);
         let end_at = current_period_end.sub(total_duration);
         let mut current_period_start: DateTime<Utc> = current_period_end.sub(interval_duration);
 
@@ -229,9 +232,10 @@ impl Wallet {
     ) -> Result<Vec<RecordHistory<WithdrawalRecord>>> {
         let mut result = vec![];
 
-        let total_duration = total_duration.unwrap_or(Duration::days(DEFAULT_WALLET_HISTORY_QUERY_INTERVAL_DAYS));
+        let total_duration =
+            total_duration.unwrap_or_else(|| Duration::days(DEFAULT_WALLET_HISTORY_QUERY_INTERVAL_DAYS));
         let interval_duration = Duration::days(DEFAULT_WALLET_HISTORY_QUERY_INTERVAL_DAYS);
-        let mut current_period_end: DateTime<Utc> = start_from.unwrap_or(Utc::now());
+        let mut current_period_end: DateTime<Utc> = start_from.unwrap_or_else(Utc::now);
         let end_at = current_period_end.sub(total_duration);
         let mut current_period_start: DateTime<Utc> = current_period_end.sub(interval_duration);
 
@@ -295,8 +299,8 @@ impl Wallet {
         transfer_type: UniversalTransferType,
     ) -> Result<TransactionId> {
         let transfer = UniversalTransfer {
-            asset: asset.into(),
-            amount: amount.into(),
+            asset,
+            amount,
             from_symbol: from_symbol.map(Into::<String>::into),
             to_symbol: to_symbol.map(Into::<String>::into),
             transfer_type,
@@ -458,7 +462,15 @@ impl Wallet {
         let mut query = HashMap::new();
         query.insert("symbol", symbol);
         self.client
-            .get_signed_p(SAPI_V1_ASSET_TRADEFEE, Some(query), self.recv_window)
+            .get_signed_p(
+                if self.binance_us_api {
+                    SAPI_V1_ASSET_TRADEFEE_US
+                } else {
+                    SAPI_V1_ASSET_TRADEFEE
+                },
+                Some(query),
+                self.recv_window,
+            )
             .await
     }
 
@@ -479,7 +491,7 @@ impl Wallet {
     ) -> Result<WalletFundings> {
         let mut query = HashMap::new();
         query.insert("asset", asset);
-        query.insert("need_btc_valuation", need_btc_valuation.map(|b| format!("{}", b)));
+        query.insert("need_btc_valuation", need_btc_valuation.map(|b| format!("{b}")));
         self.client
             .post_signed_p(SAPI_V1_ASSET_GETFUNDINGASSET, Some(query), self.recv_window)
             .await
