@@ -228,15 +228,17 @@ impl WebsocketImproved {
     }
 
     /// If the callback returns an error, the stream will be stopped
-    pub fn start_streaming_async<WsItemT, F, E, T, ParamT>(
+    pub fn start_streaming_async<WsItemT, F, E, EF, T, ParamT>(
         self,
         callback: F,
+        err_callback: EF,
         param: ParamT,
         should_stop: Arc<AtomicBool>,
     ) -> Result<JoinHandle<()>>
     where
         WsItemT: DeserializeOwned + Send,
         F: Fn(Result<WsItemT>, ParamT) -> T + Send + Sync + 'static,
+        EF: Fn(Error) -> E + Send + Sync + 'static,
         T: Future<Output = std::result::Result<(), E>> + Send,
         ParamT: Send + Sync + Clone + 'static,
     {
@@ -270,11 +272,13 @@ impl WebsocketImproved {
                     }
                     Ok(m) => {
                         println!("unexpected message {m:?}");
+                        (err_callback)(Error::Msg(format!("Unexpected message {m:?}")));
                     }
 
                     Err(e) => {
                         println!("error {e}");
                         should_stop.store(true, Ordering::Relaxed);
+                        (err_callback)(Error::Msg(format!("Error {e}")));
                     }
                 }
             }
