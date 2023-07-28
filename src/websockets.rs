@@ -4,7 +4,6 @@ use std::sync::{
 };
 
 use futures::{Future, SinkExt, StreamExt};
-use serde::de::DeserializeOwned;
 use serde_json::from_str;
 use tokio::{net::TcpStream, task::JoinHandle};
 use tokio_tungstenite::{
@@ -205,7 +204,6 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
 #[derive(Debug)]
 pub struct WebsocketImproved {
     pub socket: (WebSocketStream<MaybeTlsStream<TcpStream>>, Response),
-    conf: Config,
 }
 
 impl WebsocketImproved {
@@ -215,7 +213,7 @@ impl WebsocketImproved {
         let wss = format!("{}/{}/{}", conf.ws_endpoint, WS_ENDPOINT, listen_key);
         let url = Url::parse(&wss)?;
 
-        Ok(connect_async(url).await.map(|socket| Self { socket, conf })?)
+        Ok(connect_async(url).await.map(|socket| Self { socket })?)
     }
 
     /// Connect to a futures websocket endpoint
@@ -224,11 +222,11 @@ impl WebsocketImproved {
         let wss = format!("{}/{}/{}", conf.futures_ws_endpoint, WS_ENDPOINT, listen_key);
         let url = Url::parse(&wss)?;
 
-        Ok(connect_async(url).await.map(|socket| Self { socket, conf })?)
+        Ok(connect_async(url).await.map(|socket| Self { socket })?)
     }
 
     /// If the callback returns an error, the stream will be stopped
-    pub fn start_streaming_async<WsItemT, F, E, EF, T, ParamT>(
+    pub fn start_streaming_async<F, E, EF, T, ParamT>(
         self,
         callback: F,
         err_callback: EF,
@@ -236,8 +234,7 @@ impl WebsocketImproved {
         should_stop: Arc<AtomicBool>,
     ) -> Result<JoinHandle<()>>
     where
-        WsItemT: DeserializeOwned + Send,
-        F: Fn(Result<WsItemT>, ParamT) -> T + Send + Sync + 'static,
+        F: Fn(String, ParamT) -> T + Send + Sync + 'static,
         EF: Fn(Error) -> E + Send + Sync + 'static,
         T: Future<Output = std::result::Result<(), E>> + Send,
         ParamT: Send + Sync + Clone + 'static,
@@ -256,8 +253,8 @@ impl WebsocketImproved {
                 }
                 match msg {
                     Ok(Message::Text(msg)) => {
-                        let deserialize_res = from_str::<WsItemT>(&msg).map_err(Into::into);
-                        if let Err(_) = callback(deserialize_res, param.clone()).await {
+                        // let deserialize_res = from_str::<WsItemT>(&msg).map_err(Into::into);
+                        if let Err(_) = callback(msg, param.clone()).await {
                             // if the callback returns an error, we should stop the loop
                             should_stop.store(true, Ordering::Relaxed);
                             break;
